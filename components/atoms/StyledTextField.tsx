@@ -5,6 +5,7 @@ const StyledTextField = (props: TextFieldProps) => (
     {...props}
     sx={{
       mb: 3,
+      mt: 2,
       "& .MuiOutlinedInput-root": {
         color: "white",
         backgroundColor: "rgba(255,255,255,0.05)",

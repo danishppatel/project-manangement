@@ -73,7 +73,7 @@ const Task = ({ id, index, title, description, status, assignedTo = '', onStatus
 
   return (
     // <DraggableClient id={id} status={status} index={index}>
-      <div style={{ cursor: 'grab' }}>
+      <div>
         <Card 
           sx={{
             height: '100%',
@@ -88,6 +88,7 @@ const Task = ({ id, index, title, description, status, assignedTo = '', onStatus
               transition: 'all 0.2s ease-in-out'
             },
             borderRadius: '8px',
+            mb: 3,
             border: '1px solid rgba(255,255,255,0.1)'
           }}
         >
