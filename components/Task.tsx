@@ -72,7 +72,7 @@ const Task = ({ id, index, title, description, status, assignedTo = '', onStatus
   };
 
   return (
-    <DraggableClient id={id} status={status} index={index}>
+    // <DraggableClient id={id} status={status} index={index}>
       <div style={{ cursor: 'grab' }}>
         <Card 
           sx={{
@@ -234,7 +234,7 @@ const Task = ({ id, index, title, description, status, assignedTo = '', onStatus
           </CardContent>
         </Card>
       </div>
-    </DraggableClient>
+    // </DraggableClient>
   );
 };
 
