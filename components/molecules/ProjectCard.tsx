@@ -8,6 +8,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  console.log(project)
   const router = useRouter();
   
   const completedTasks = project.tasks.filter(task => task.status === 'completed').length;

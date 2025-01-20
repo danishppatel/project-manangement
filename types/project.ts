@@ -9,7 +9,13 @@ export interface Task {
 export interface Project {
   id: string;
   name: string;
-  tasks: Task[];
+  tasks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    status: 'pending' | 'in_progress' | 'completed';
+    assignedTo: string;
+  }>;
 }
 
 export interface ProjectCardStats {
