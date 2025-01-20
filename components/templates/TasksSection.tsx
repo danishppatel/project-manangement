@@ -123,8 +123,9 @@ const TasksSection = ({
                 {groupedTasks[status].map((task, index) => (
                   <Task
                     key={task.id}
-                    index={index}
                     {...task}
+                    projectId={selectedProject?.id || ''}
+                    index={index}
                     onStatusChange={onStatusChange}
                     onEdit={onEditTask}
                     onDelete={onDeleteTask}

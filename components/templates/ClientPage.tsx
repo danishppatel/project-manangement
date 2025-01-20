@@ -11,8 +11,9 @@ import TasksSection from "./TasksSection";
 import LoadingSpinner from '@/components/atoms/LoadingSpinner';
 import ErrorMessage from '@/components/atoms/ErrorMessage';
 import { useRouter } from "next/navigation";
-import { getAllProjects, createNewProject } from "@/lib/api";
+import { getAllProjects, createNewProject, createNewTask, getTasksByProject, deleteExistingTask, updateExistingTask } from "@/lib/api";
 import client from "@/graphql/apollo-client";
+import { Task } from "@/types/task";
 
 interface TaskType {
   id: string;
@@ -37,6 +38,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
   const [selectedProject, setSelectedProject] = useState<Project | undefined>(
     projects.find((p) => p.id === projectId)
   );
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<TaskType | null>(null);
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
@@ -65,6 +67,26 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     fetchProjects();
   }, [projectId]);
 
+  // Fetch tasks when selected project changes
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!selectedProject) return;
+      
+      try {
+        setIsLoading(true);
+        const projectTasks = await getTasksByProject(client, selectedProject.id);
+        setTasks(projectTasks);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch tasks'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [selectedProject]);
+
   const handleProjectSelect = (project: Project) => {
     router.push(`/projects/${project.id}`);
   };
@@ -81,89 +103,120 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     });
   };
 
-  const handleAddTask = (newTask: Omit<TaskType, "id">) => {
-    const task: TaskType = {
-      ...newTask,
-      id: `${selectedProject?.id}-${Date.now()}`,
-    };
+  const handleAddTask = async (newTask: { title: string; description?: string }) => {
+    if (!selectedProject) return;
 
-    setProjects(
-      projects.map((project) => {
-        if (project.id === selectedProject?.id) {
-          return {
-            ...project,
-            tasks: [...(project.tasks || []), task],
-          };
-        }
-        return project;
-      })
-    );
-
-    setSelectedProject((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        tasks: [...(prev.tasks || []), task],
+    try {
+      setIsLoading(true);
+      
+      // Create the task input with default status and selected project
+      const taskInput = {
+        title: newTask.title,
+        description: newTask.description,
+        status: "PENDING", // Default status
+        projectId: selectedProject.id
       };
-    });
+
+      // Call the API to create new task
+      const createdTask = await createNewTask(client, taskInput);
+      
+      // Update local state with the new task
+      setSelectedProject((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          tasks: [...(prev.tasks || []), createdTask],
+        };
+      });
+
+      // Close the dialog
+      setIsNewTaskDialogOpen(false);
+      
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error('Failed to create task'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditTask = (task: {
+  const handleEditTask = async (task: {
     id: string;
     title: string;
     description: string;
     assignedTo: string;
     status: TaskStatus;
   }) => {
-    setProjects(
-      projects.map((project) => ({
-        ...project,
-        tasks: project.tasks?.map((t) =>
-          t.id === task.id ? { ...t, ...task } : t
-        ),
-      }))
-    );
+    if (!selectedProject) return;
 
-    setSelectedProject((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        tasks: prev.tasks?.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
+    try {
+      setIsLoading(true);
+      
+      // Prepare the update input
+      const updateInput = {
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        userId: task.assignedTo
       };
-    });
+
+      // Call the API to update the task
+      const updatedTask = await updateExistingTask(
+        client,
+        task.id,
+        updateInput,
+        selectedProject.id
+      );
+      
+      // Update local state
+      setTasks(prevTasks => 
+        prevTasks.map(t => t.id === task.id ? updatedTask : t)
+      );
+      
+      // Close the edit dialog
+      setEditTask(null);
+      setError(null);
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error('Failed to update task'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    setProjects(
-      projects.map((project) => ({
-        ...project,
-        tasks: project.tasks?.filter((t) => t.id !== taskId),
-      }))
-    );
+  const handleDeleteTask = async (taskId: string) => {
+    if (!selectedProject) return;
 
-    setSelectedProject((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        tasks: prev.tasks?.filter((t) => t.id !== taskId),
-      };
-    });
+    try {
+      setIsLoading(true);
+      
+      // Call the API to delete the task
+      await deleteExistingTask(client, taskId, selectedProject.id);
+      
+      // Update local state
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      
+      setError(null);
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error('Failed to delete task'));
+    } finally {
+      setIsLoading(false);
+    }
   };
-
+  
   const groupedTasks = {
-    pending: selectedProject?.tasks?.filter((task) => task.status === "pending") || [],
-    in_progress: selectedProject?.tasks?.filter(
-      (task) => task.status === "in_progress"
+    pending: tasks?.filter((task) => task.status === "PENDING") || [],
+    in_progress: tasks?.filter(
+      (task) => task.status === "INPROGRESS"
     ) || [],
-    completed: selectedProject?.tasks?.filter(
-      (task) => task.status === "completed"
+    completed: tasks?.filter(
+      (task) => task.status === "COMPLETED"
     ) || [],
   };
+
 
   const statusHeaders = {
-    pending: { title: "Pending", color: "#FF991F" },
-    in_progress: { title: "In Progress", color: "#0052CC" },
-    completed: { title: "Completed", color: "#36B37E" },
+    pending: { title: "PENDING", color: "#FF991F" },
+    in_progress: { title: "INPROGRESS", color: "#0052CC" },
+    completed: { title: "COMPLETED", color: "#36B37E" },
   };
 
   const handleAddProject = async ({ name, description }: { name: string; description?: string }) => {

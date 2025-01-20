@@ -6,8 +6,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import { useState } from 'react';
+import { updateExistingTask } from '@/lib/api';
+import client from '@/graphql/apollo-client';
 
-export type TaskStatus = 'pending' | 'in_progress' | 'completed';
+export type TaskStatus = 'PENDING' | 'INPROGRESS' | 'COMPLETED';
 
 interface TaskProps {
   id: string;
@@ -16,6 +18,7 @@ interface TaskProps {
   description: string;
   status: TaskStatus;
   assignedTo?: string;
+  projectId?: string;
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
   onEdit: (task: { id: string; title: string; description: string; assignedTo: string; status: TaskStatus }) => void;
   onDelete: (taskId: string) => void;
@@ -28,7 +31,7 @@ const teamMembers = [
   { id: '4', name: 'Sarah Williams' }
 ];
 
-const Task = ({ id, title, description, status, assignedTo = '', onStatusChange, onEdit, onDelete }: TaskProps) => {
+const Task = ({ id, title, description, status, assignedTo = '', onStatusChange, onEdit, onDelete, projectId }: TaskProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -50,15 +53,31 @@ const Task = ({ id, title, description, status, assignedTo = '', onStatusChange,
     handleClose();
   };
 
-  const handleStatusChange = (event: SelectChangeEvent) => {
-    onStatusChange(id, event.target.value as TaskStatus);
+  const handleStatusChange = async (event: SelectChangeEvent) => {
+    const newStatus = event.target.value as TaskStatus;
+    
+    try {
+      // Call the API to update the task status
+      await updateExistingTask(
+        client,
+        id,
+        { status: newStatus },
+        projectId
+      );
+      
+      // Call the parent handler to update local state
+      onStatusChange(id, newStatus);
+    } catch (error) {
+      console.error('Failed to update task status:', error);
+      // You might want to add error handling UI here
+    }
   };
 
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
-      case 'completed':
+      case 'COMPLETED':
         return '#36B37E'; // Brighter green
-      case 'in_progress':
+      case 'INPROGRESS': 
         return '#0052CC'; // Brighter blue
       default:
         return '#FF991F'; // Brighter yellow/orange
@@ -226,9 +245,9 @@ const Task = ({ id, title, description, status, assignedTo = '', onStatusChange,
                   }
                 }}
               >
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="in_progress">In Progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="PENDING">Pending</MenuItem>
+                <MenuItem value="INPROGRESS">In Progress</MenuItem>
+                <MenuItem value="COMPLETED">Completed</MenuItem>
               </Select>
             </Box>
           </CardContent>

@@ -16,7 +16,7 @@ interface NewTaskDialogProps {
   onAdd: (task: {
     title: string;
     description: string;
-    assignedTo: string;
+    assignedTo?: string;
     status: TaskStatus;
   }) => void;
 }
@@ -35,12 +35,12 @@ const NewTaskDialog = ({ open, onClose, onAdd }: NewTaskDialogProps) => {
   const [assignedTo, setAssignedTo] = useState("");
 
   const handleSubmit = () => {
-    if (title && description && assignedTo) {
+    if (title && description) {
       onAdd({
         title,
         description,
-        assignedTo,
-        status: "pending", // Always pending for new tasks
+        ...(assignedTo ? { assignedTo } : {}),
+        status: "PENDING", // Always pending for new tasks
       });
       // Reset form
       setTitle("");
@@ -95,7 +95,7 @@ const NewTaskDialog = ({ open, onClose, onAdd }: NewTaskDialogProps) => {
         onClose={onClose}
         onSubmit={handleSubmit}
         submitLabel="Create Task"
-        isSubmitDisabled={!title || !description || !assignedTo}
+        isSubmitDisabled={!title || !description }
       />
     </StyledDialog>
   );

@@ -17,7 +17,7 @@ interface EditTaskDialogProps {
     id: string;
     title: string;
     description: string;
-    assignedTo: string;
+    assignedTo?: string;
     status: TaskStatus;
   }) => void;
   task: {
@@ -46,7 +46,7 @@ const EditTaskDialog = ({
     title: "",
     description: "",
     assignedTo: "",
-    status: "pending" as TaskStatus,
+    status: "PENDING" as TaskStatus,
   });
 
   useEffect(() => {
@@ -55,14 +55,14 @@ const EditTaskDialog = ({
         title: task.title || "",
         description: task.description || "",
         assignedTo: task.assignedTo || "",
-        status: task.status || "pending",
+        status: task.status || "PENDING",
       });
     } else {
       setFormData({
         title: "",
         description: "",
         assignedTo: "",
-        status: "pending",
+        status: "PENDING",
       });
     }
   }, [task, open]);
@@ -71,7 +71,10 @@ const EditTaskDialog = ({
     if (task) {
       onSave({
         id: task.id,
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        status: formData.status,
+        ...(formData.assignedTo ? { assignedTo: formData.assignedTo } : {})
       });
       onClose();
     }
@@ -136,9 +139,9 @@ const EditTaskDialog = ({
           value={formData.status}
           onChange={handleChange("status")}
         >
-          <MenuItem value="pending">Pending</MenuItem>
-          <MenuItem value="in_progress">In Progress</MenuItem>
-          <MenuItem value="completed">Completed</MenuItem>
+          <MenuItem value="PENDING">Pending</MenuItem>
+          <MenuItem value="INPROGRESS">In Progress</MenuItem>
+          <MenuItem value="COMPLETED">Completed</MenuItem>
         </StyledSelect>
       </DialogContent>
 
@@ -149,7 +152,6 @@ const EditTaskDialog = ({
         isSubmitDisabled={
           !formData.title ||
           !formData.description ||
-          !formData.assignedTo ||
           !formData.status
         }
       />
