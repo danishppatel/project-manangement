@@ -9,7 +9,9 @@ export interface TaskType {
 export interface Project {
   id: string;
   name: string;
-  tasks: TaskType[];
+  description?: string;
+  tasks?: TaskType[];
+  createdAt: string;
 }
 
 export type TaskStatus = "pending" | "in_progress" | "completed";

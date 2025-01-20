@@ -5,11 +5,14 @@ import { Box } from "@mui/material";
 import { TaskStatus } from "../Task";
 import NewTaskDialog from "../NewTaskDialog";
 import EditTaskDialog from "../EditTaskDialog";
-import NewProjectDialog from "../NewProjectDialog";
+import NewProjectDialog from "../organisms/NewProjectDialog";
 import ProjectsSidebar from "../organisms/ProjectsSidebar";
 import TasksSection from "./TasksSection";
-// import { DragDropClient } from "../DragDropClient";
+import LoadingSpinner from '@/components/atoms/LoadingSpinner';
+import ErrorMessage from '@/components/atoms/ErrorMessage';
 import { useRouter } from "next/navigation";
+import { getAllProjects, createNewProject } from "@/lib/api";
+import client from "@/graphql/apollo-client";
 
 interface TaskType {
   id: string;
@@ -22,131 +25,15 @@ interface TaskType {
 interface Project {
   id: string;
   name: string;
-  tasks: TaskType[];
+  description?: string;
+  tasks?: TaskType[];
+  createdAt: string;
 }
 
-// Sample data (you might want to move this to a separate file)
-export const projectsData: Project[] = [
-  {
-    id: '1',
-    name: 'Website Redesign',
-    tasks: [
-      { 
-        id: '101', 
-        title: 'Design Homepage', 
-        description: 'Create a modern homepage design with improved UI/UX',
-        status: 'completed',
-        assignedTo: "1"  // John Doe's ID
-      },
-      { 
-        id: '102', 
-        title: 'Implement Authentication', 
-        description: 'Set up secure user authentication system',
-        status: 'in_progress',
-        assignedTo: "2"  // Jane Smith's ID
-      },
-      { 
-        id: '103', 
-        title: 'Mobile Responsiveness', 
-        description: 'Ensure website works on all devices',
-        status: 'pending',
-        assignedTo: "3"  // Mike Johnson's ID
-      }
-    ],
-  },
-  {
-    id: '2',
-    name: 'Mobile App Development',
-    tasks: [
-      { 
-        id: '201', 
-        title: 'UI/UX Design', 
-        description: 'Design user interface mockups and user experience flows',
-        status: 'completed',
-        assignedTo: "4"  // Sarah Williams's ID
-      },
-      { 
-        id: '202', 
-        title: 'Core Features Development', 
-        description: 'Implement main features of the mobile app',
-        status: 'in_progress',
-        assignedTo: "3"  // Mike Johnson's ID
-      },
-      { 
-        id: '203', 
-        title: 'API Integration', 
-        description: 'Connect mobile app with backend services',
-        status: 'in_progress',
-        assignedTo: "1"  // John Doe's ID
-      },
-      { 
-        id: '204', 
-        title: 'Push Notifications', 
-        description: 'Implement push notification system',
-        status: 'pending',
-        assignedTo: "2"  // Jane Smith's ID
-      },
-      { 
-        id: '205', 
-        title: 'App Testing', 
-        description: 'Conduct thorough testing on multiple devices',
-        status: 'pending',
-        assignedTo: "4"  // Sarah Williams's ID
-      }
-    ],
-  },
-  {
-    id: '3',
-    name: 'Data Analytics Dashboard',
-    tasks: [
-      { 
-        id: '301', 
-        title: 'Data Model Design', 
-        description: 'Design the data schema and relationships',
-        status: 'completed',
-        assignedTo: "1"  // John Doe's ID
-      },
-      { 
-        id: '302', 
-        title: 'Data Integration', 
-        description: 'Connect and integrate multiple data sources',
-        status: 'in_progress',
-        assignedTo: "3"  // Mike Johnson's ID
-      },
-      { 
-        id: '303', 
-        title: 'Dashboard Layout', 
-        description: 'Design and implement dashboard layout with widgets',
-        status: 'in_progress',
-        assignedTo: "4"  // Sarah Williams's ID
-      },
-      { 
-        id: '304', 
-        title: 'Chart Components', 
-        description: 'Create reusable chart components',
-        status: 'pending',
-        assignedTo: "2"  // Jane Smith's ID
-      },
-      { 
-        id: '305', 
-        title: 'Real-time Updates', 
-        description: 'Implement real-time data updates',
-        status: 'pending',
-        assignedTo: "3"  // Mike Johnson's ID
-      },
-      { 
-        id: '306', 
-        title: 'Export Features', 
-        description: 'Add functionality to export data in multiple formats',
-        status: 'pending',
-        assignedTo: "1"  // John Doe's ID
-      }
-    ],
-  }
-];
-
 export default function ClientPage({ projectId }: { projectId: string }) {
-  const [projects, setProjects] = useState<Project[]>(projectsData);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | undefined>(
     projects.find((p) => p.id === projectId)
   );
@@ -156,14 +43,27 @@ export default function ClientPage({ projectId }: { projectId: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    const project = projects.find((p) => p.id === projectId);
-    if (project) {
-      setSelectedProject(project);
-    } else {
-      // Fallback to first project if the ID is not found
-      setSelectedProject(projects[0]);
-    }
-  }, [projectId, projects]); // Remove projects from dependency array to avoid unnecessary rerenders
+    const fetchProjects = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAllProjects(client);
+        setProjects(data as Project[]);
+        
+        // Set selected project after we have the data
+        if (data && data.length > 0) {
+          const project = data.find((p) => p.id === projectId);
+          setSelectedProject(project as Project);
+        }
+        
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch projects'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProjects();
+  }, [projectId]);
 
   const handleProjectSelect = (project: Project) => {
     router.push(`/projects/${project.id}`);
@@ -174,7 +74,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
       if (!prev) return prev;
       return {
         ...prev,
-        tasks: prev.tasks.map((task) =>
+        tasks: prev.tasks?.map((task) =>
           task.id === taskId ? { ...task, status: newStatus } : task
         ),
       };
@@ -192,7 +92,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
         if (project.id === selectedProject?.id) {
           return {
             ...project,
-            tasks: [...project.tasks, task],
+            tasks: [...(project.tasks || []), task],
           };
         }
         return project;
@@ -218,7 +118,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     setProjects(
       projects.map((project) => ({
         ...project,
-        tasks: project.tasks.map((t) =>
+        tasks: project.tasks?.map((t) =>
           t.id === task.id ? { ...t, ...task } : t
         ),
       }))
@@ -228,7 +128,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
       if (!prev) return prev;
       return {
         ...prev,
-        tasks: prev.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
+        tasks: prev.tasks?.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
       };
     });
   };
@@ -237,7 +137,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     setProjects(
       projects.map((project) => ({
         ...project,
-        tasks: project.tasks.filter((t) => t.id !== taskId),
+        tasks: project.tasks?.filter((t) => t.id !== taskId),
       }))
     );
 
@@ -245,17 +145,17 @@ export default function ClientPage({ projectId }: { projectId: string }) {
       if (!prev) return prev;
       return {
         ...prev,
-        tasks: prev.tasks.filter((t) => t.id !== taskId),
+        tasks: prev.tasks?.filter((t) => t.id !== taskId),
       };
     });
   };
 
   const groupedTasks = {
-    pending: selectedProject?.tasks.filter((task) => task.status === "pending") || [],
-    in_progress: selectedProject?.tasks.filter(
+    pending: selectedProject?.tasks?.filter((task) => task.status === "pending") || [],
+    in_progress: selectedProject?.tasks?.filter(
       (task) => task.status === "in_progress"
     ) || [],
-    completed: selectedProject?.tasks.filter(
+    completed: selectedProject?.tasks?.filter(
       (task) => task.status === "completed"
     ) || [],
   };
@@ -266,15 +166,45 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     completed: { title: "Completed", color: "#36B37E" },
   };
 
-  const handleAddProject = ({ name }: { name: string }) => {
-    const newProject: Project = {
-      id: `project-${Date.now()}`,
-      name,
-      tasks: [],
-    };
-
-    setProjects([...projects, newProject]);
+  const handleAddProject = async ({ name, description }: { name: string; description?: string }) => {
+    try {
+      setIsLoading(true);
+      // Call the API to create new project
+      const newProject = await createNewProject(client, {
+        name,
+        description
+      });
+      
+      // Update local state with the new project from the server
+      setIsNewProjectDialogOpen(false);
+      setProjects((prevProjects) => [...prevProjects, newProject as Project]);
+      
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error('Failed to create project'));
+    } finally {
+      setIsLoading(false);
+    }
   };
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return (
+      <ErrorMessage 
+        message="Failed to load projects"
+        error={error}
+        onRetry={() => {
+          setError(null);
+          setIsLoading(true);
+          getAllProjects(client)
+            .then(data => setProjects(data as Project[]))
+            .catch(err => setError(err))
+            .finally(() => setIsLoading(false));
+        }}
+      />
+    );
+  }
 
   return (
     // <DragDropClient onDragEnd={handleDragEnd}>

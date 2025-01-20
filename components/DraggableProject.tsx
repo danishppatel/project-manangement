@@ -7,7 +7,7 @@ interface DraggableProjectProps {
   project: {
     id: string;
     name: string;
-    tasks: any[];
+    tasks?: unknown[];
   };
   index: number;
   isSelected: boolean;
@@ -38,7 +38,7 @@ const DraggableProject = ({ project, index, isSelected, onSelect }: DraggablePro
         >
           <ListItemText 
             primary={project.name}
-            secondary={`${project.tasks.length} tasks`}
+            secondary={`${project?.tasks?.length} tasks`}
             primaryTypographyProps={{
               fontWeight: 500,
               color: 'inherit'

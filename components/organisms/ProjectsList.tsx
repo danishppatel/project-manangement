@@ -14,7 +14,7 @@ const ProjectsList = ({
   onProjectSelect,
 }: ProjectsListProps) => (
   <DroppableClient status="project">
-    {projects.map((project, index) => (
+    {projects?.map((project, index) => (
       <DraggableProject
         key={project.id}
         project={project}

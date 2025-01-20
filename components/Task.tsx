@@ -6,7 +6,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import { useState } from 'react';
-import { DraggableClient } from './DragDropClient';
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 
@@ -29,7 +28,7 @@ const teamMembers = [
   { id: '4', name: 'Sarah Williams' }
 ];
 
-const Task = ({ id, index, title, description, status, assignedTo = '', onStatusChange, onEdit, onDelete }: TaskProps) => {
+const Task = ({ id, title, description, status, assignedTo = '', onStatusChange, onEdit, onDelete }: TaskProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 

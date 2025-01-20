@@ -42,7 +42,7 @@ const TasksSection = ({
   >
     <ProjectHeader
       name={selectedProject?.name}
-      taskCount={selectedProject?.tasks.length}
+      taskCount={selectedProject?.tasks?.length}
       onAddTask={onAddTask}
     />
 
