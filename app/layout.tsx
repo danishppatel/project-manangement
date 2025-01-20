@@ -2,6 +2,8 @@
 
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme';
+import { ApolloProvider } from '@apollo/client'
+import client from "@/graphql/apollo-client"
 
 export default function RootLayout({
   children,
@@ -12,8 +14,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {children}
+          <ApolloProvider client={client}>
+            <CssBaseline />
+            {children}
+          </ApolloProvider>
         </ThemeProvider>
       </body>
     </html>
