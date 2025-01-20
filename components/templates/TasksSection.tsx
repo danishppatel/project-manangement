@@ -1,17 +1,13 @@
-import { DropResult, DraggableLocation } from "@hello-pangea/dnd";
-import TaskColumn from "../organisms/TaskColumn";
 import ProjectHeader from "../molecules/ProjectHeader";
 import { TaskStatus } from "@/types";
 
 import { Project } from "@/types";
 import { TaskType } from "@/types";
 import { Box, Typography } from "@mui/material";
-import { DragDropClient } from "../DragDropClient";
-import { DroppableClient } from "../DragDropClient";
 import Task from "../Task";
 
 interface TasksSectionProps {
-  selectedProject: Project;
+  selectedProject?: Project;
   groupedTasks: {
     pending: TaskType[];
     in_progress: TaskType[];
@@ -24,7 +20,6 @@ interface TasksSectionProps {
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
   onEditTask: (task: TaskType) => void;
   onDeleteTask: (taskId: string) => void;
-  onDragEnd: (result: DropResult) => void;
 }
 
 const TasksSection = ({
@@ -35,7 +30,6 @@ const TasksSection = ({
   onStatusChange,
   onEditTask,
   onDeleteTask,
-  onDragEnd,
 }: TasksSectionProps) => (
   <Box
     sx={{
@@ -47,8 +41,8 @@ const TasksSection = ({
     }}
   >
     <ProjectHeader
-      name={selectedProject.name}
-      taskCount={selectedProject.tasks.length}
+      name={selectedProject?.name}
+      taskCount={selectedProject?.tasks.length}
       onAddTask={onAddTask}
     />
 
@@ -69,9 +63,12 @@ const TasksSection = ({
     > */}
       <Box
         sx={{
-          display: "flex",
+          display: "grid",
           gap: 3,
-          flexDirection: { xs: "column", lg: "row" },
+          gridTemplateColumns: {
+            xs: "1fr",            // 1 column for mobile (<768px)
+            md: "repeat(3, 3fr)"  // 3 columns for screens >= 768px
+          },
         }}
       >
         {(Object.keys(groupedTasks) as Array<keyof typeof groupedTasks>).map(
@@ -79,7 +76,6 @@ const TasksSection = ({
             <Box
               key={status}
               sx={{
-                flex: 1,
                 minWidth: 0,
               }}
             >
@@ -144,11 +140,3 @@ const TasksSection = ({
 );
 
 export default TasksSection;
-function onTaskReorder(
-  draggableId: string,
-  arg1: string,
-  index: number,
-  index1: number
-) {
-  throw new Error("Function not implemented.");
-}

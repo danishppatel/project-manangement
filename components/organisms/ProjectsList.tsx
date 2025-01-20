@@ -4,7 +4,7 @@ import { Project } from "../../types";
 
 interface ProjectsListProps {
   projects: Project[];
-  selectedProjectId: string;
+  selectedProjectId?: string;
   onProjectSelect: (project: Project) => void;
 }
 

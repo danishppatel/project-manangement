@@ -2,8 +2,8 @@ import { Box, Button, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
 interface ProjectHeaderProps {
-  name: string;
-  taskCount: number;
+  name?: string;
+  taskCount?: number;
   onAddTask: () => void;
 }
 
@@ -23,6 +23,9 @@ const ProjectHeader = ({ name, taskCount, onAddTask }: ProjectHeaderProps) => (
           color: "white",
           fontWeight: 600,
           mb: 1,
+          "@media (max-width: 768px)": {
+            fontSize: "18px",
+          }
         }}
       >
         {name}
@@ -47,6 +50,13 @@ const ProjectHeader = ({ name, taskCount, onAddTask }: ProjectHeaderProps) => (
         "&:hover": {
           bgcolor: "#0047B3",
         },
+        "@media (max-width: 768px)": {
+          padding: "6px 12px",
+          fontSize: "12px",
+          "& .MuiSvgIcon-root": {
+            fontSize: "18px",
+          },
+        }
       }}
     >
       Add New Task

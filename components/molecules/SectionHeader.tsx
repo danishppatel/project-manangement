@@ -1,28 +1,41 @@
 import { Box, Typography } from "@mui/material";
 import IconButton from "../atoms/IconButton";
 import AddIcon from "@mui/icons-material/Add";
+import MenuIcon from "@mui/icons-material/Menu";
+import Link from "next/link";
 
 interface SectionHeaderProps {
   title: string;
   onAddClick: () => void;
+  onDrawerToggle?: () => void;
+  showDrawerIcon?: boolean;
 }
 
-const SectionHeader = ({ title, onAddClick }: SectionHeaderProps) => (
+const SectionHeader = ({ title, onAddClick, onDrawerToggle, showDrawerIcon }: SectionHeaderProps) => (
   <Box
     sx={{
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      mb: 2,
+      mb: 0,
       p: 1,
     }}
   >
-    <Typography variant="h5" sx={{ color: "white", fontWeight: 600 }}>
-      {title}
-    </Typography>
-    <IconButton size="small" startIcon={<AddIcon />} onClick={onAddClick}>
-      Add
-    </IconButton>
+    <Link href="/" style={{ textDecoration: 'none' }}>
+      <Typography variant="h5" sx={{ color: "white", fontWeight: 600, cursor: 'pointer' }}>
+        {title}
+      </Typography>
+    </Link>
+    <Box sx={{ display: 'flex', gap: 1 }}>
+      <IconButton size="small" startIcon={<AddIcon />} onClick={onAddClick}>
+        Add
+      </IconButton>
+      {showDrawerIcon && (
+        <IconButton size="small" onClick={onDrawerToggle}>
+          <MenuIcon />
+        </IconButton>
+      )}
+    </Box>
   </Box>
 );
 

@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
-import type { DropResult } from "@hello-pangea/dnd";
 import { TaskStatus } from "../Task";
 import NewTaskDialog from "../NewTaskDialog";
 import EditTaskDialog from "../EditTaskDialog";
 import NewProjectDialog from "../NewProjectDialog";
 import ProjectsSidebar from "../organisms/ProjectsSidebar";
 import TasksSection from "./TasksSection";
-import { DragDropClient } from "../DragDropClient";
+// import { DragDropClient } from "../DragDropClient";
+import { useRouter } from "next/navigation";
 
 interface TaskType {
   id: string;
@@ -26,103 +26,170 @@ interface Project {
 }
 
 // Sample data (you might want to move this to a separate file)
-const projectsData: Project[] = [
+export const projectsData: Project[] = [
   {
-    id: "1",
-    name: "Website Redesign",
+    id: '1',
+    name: 'Website Redesign',
     tasks: [
-      {
-        id: "101",
-        title: "Design Homepage",
-        description: "Create a modern and responsive homepage design",
-        status: "completed",
-        assignedTo: "1",
+      { 
+        id: '101', 
+        title: 'Design Homepage', 
+        description: 'Create a modern homepage design with improved UI/UX',
+        status: 'completed',
+        assignedTo: "1"  // John Doe's ID
       },
-      {
-        id: "102",
-        title: "Implement User Authentication",
-        description: "Set up secure user authentication system",
-        status: "in_progress",
-        assignedTo: "2",
+      { 
+        id: '102', 
+        title: 'Implement Authentication', 
+        description: 'Set up secure user authentication system',
+        status: 'in_progress',
+        assignedTo: "2"  // Jane Smith's ID
       },
-      {
-        id: "103",
-        title: "Mobile Responsiveness",
-        description: "Ensure website works well on all devices",
-        status: "pending",
-        assignedTo: "3",
-      },
+      { 
+        id: '103', 
+        title: 'Mobile Responsiveness', 
+        description: 'Ensure website works on all devices',
+        status: 'pending',
+        assignedTo: "3"  // Mike Johnson's ID
+      }
     ],
   },
   {
-    id: "2",
-    name: "Mobile App Development",
+    id: '2',
+    name: 'Mobile App Development',
     tasks: [
-      {
-        id: "201",
-        title: "UI/UX Design",
-        description: "Design user interface for the mobile app",
-        status: "in_progress",
-        assignedTo: "4",
+      { 
+        id: '201', 
+        title: 'UI/UX Design', 
+        description: 'Design user interface mockups and user experience flows',
+        status: 'completed',
+        assignedTo: "4"  // Sarah Williams's ID
       },
-      {
-        id: "202",
-        title: "API Integration",
-        description: "Integrate backend APIs with the mobile app",
-        status: "pending",
-        assignedTo: "1",
+      { 
+        id: '202', 
+        title: 'Core Features Development', 
+        description: 'Implement main features of the mobile app',
+        status: 'in_progress',
+        assignedTo: "3"  // Mike Johnson's ID
       },
+      { 
+        id: '203', 
+        title: 'API Integration', 
+        description: 'Connect mobile app with backend services',
+        status: 'in_progress',
+        assignedTo: "1"  // John Doe's ID
+      },
+      { 
+        id: '204', 
+        title: 'Push Notifications', 
+        description: 'Implement push notification system',
+        status: 'pending',
+        assignedTo: "2"  // Jane Smith's ID
+      },
+      { 
+        id: '205', 
+        title: 'App Testing', 
+        description: 'Conduct thorough testing on multiple devices',
+        status: 'pending',
+        assignedTo: "4"  // Sarah Williams's ID
+      }
     ],
   },
+  {
+    id: '3',
+    name: 'Data Analytics Dashboard',
+    tasks: [
+      { 
+        id: '301', 
+        title: 'Data Model Design', 
+        description: 'Design the data schema and relationships',
+        status: 'completed',
+        assignedTo: "1"  // John Doe's ID
+      },
+      { 
+        id: '302', 
+        title: 'Data Integration', 
+        description: 'Connect and integrate multiple data sources',
+        status: 'in_progress',
+        assignedTo: "3"  // Mike Johnson's ID
+      },
+      { 
+        id: '303', 
+        title: 'Dashboard Layout', 
+        description: 'Design and implement dashboard layout with widgets',
+        status: 'in_progress',
+        assignedTo: "4"  // Sarah Williams's ID
+      },
+      { 
+        id: '304', 
+        title: 'Chart Components', 
+        description: 'Create reusable chart components',
+        status: 'pending',
+        assignedTo: "2"  // Jane Smith's ID
+      },
+      { 
+        id: '305', 
+        title: 'Real-time Updates', 
+        description: 'Implement real-time data updates',
+        status: 'pending',
+        assignedTo: "3"  // Mike Johnson's ID
+      },
+      { 
+        id: '306', 
+        title: 'Export Features', 
+        description: 'Add functionality to export data in multiple formats',
+        status: 'pending',
+        assignedTo: "1"  // John Doe's ID
+      }
+    ],
+  }
 ];
 
-export default function ClientPage() {
+export default function ClientPage({ projectId }: { projectId: string }) {
   const [projects, setProjects] = useState<Project[]>(projectsData);
-  const [selectedProject, setSelectedProject] = useState<Project>(
-    projectsData[0]
+  const [selectedProject, setSelectedProject] = useState<Project | undefined>(
+    projects.find((p) => p.id === projectId)
   );
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<TaskType | null>(null);
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const project = projects.find((p) => p.id === projectId);
+    if (project) {
+      setSelectedProject(project);
+    } else {
+      // Fallback to first project if the ID is not found
+      setSelectedProject(projects[0]);
+    }
+  }, [projectId, projects]); // Remove projects from dependency array to avoid unnecessary rerenders
 
   const handleProjectSelect = (project: Project) => {
-    setSelectedProject(project);
+    router.push(`/projects/${project.id}`);
   };
 
-  const handleProjectDrop = (sourceIndex: number, destinationIndex: number) => {
-    const newProjects = Array.from(projects);
-    const [removed] = newProjects.splice(sourceIndex, 1);
-    newProjects.splice(destinationIndex, 0, removed);
-    setProjects(newProjects);
-  };
-
-  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    setProjects(
-      projects.map((project) => ({
-        ...project,
-        tasks: project.tasks.map((task) =>
+  const handleTaskStatusUpdate = (taskId: string, newStatus: TaskStatus) => {
+    setSelectedProject((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId ? { ...task, status: newStatus } : task
         ),
-      }))
-    );
-
-    setSelectedProject((prev) => ({
-      ...prev,
-      tasks: prev.tasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task
-      ),
-    }));
+      };
+    });
   };
 
   const handleAddTask = (newTask: Omit<TaskType, "id">) => {
     const task: TaskType = {
       ...newTask,
-      id: `${selectedProject.id}-${Date.now()}`,
+      id: `${selectedProject?.id}-${Date.now()}`,
     };
 
     setProjects(
       projects.map((project) => {
-        if (project.id === selectedProject.id) {
+        if (project.id === selectedProject?.id) {
           return {
             ...project,
             tasks: [...project.tasks, task],
@@ -132,10 +199,13 @@ export default function ClientPage() {
       })
     );
 
-    setSelectedProject((prev) => ({
-      ...prev,
-      tasks: [...prev.tasks, task],
-    }));
+    setSelectedProject((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tasks: [...(prev.tasks || []), task],
+      };
+    });
   };
 
   const handleEditTask = (task: {
@@ -154,10 +224,13 @@ export default function ClientPage() {
       }))
     );
 
-    setSelectedProject((prev) => ({
-      ...prev,
-      tasks: prev.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
-    }));
+    setSelectedProject((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tasks: prev.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
+      };
+    });
   };
 
   const handleDeleteTask = (taskId: string) => {
@@ -168,54 +241,23 @@ export default function ClientPage() {
       }))
     );
 
-    setSelectedProject((prev) => ({
-      ...prev,
-      tasks: prev.tasks.filter((t) => t.id !== taskId),
-    }));
-  };
-
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-
-    const { source, destination, draggableId, type } = result;
-
-    if (type === "PROJECT") {
-      handleProjectDrop(source.index, destination.index);
-      return;
-    }
-
-    if (source.droppableId === destination.droppableId) {
-      // Handle reordering within the same column
-      const newTasks = Array.from(selectedProject.tasks);
-      const [removed] = newTasks.splice(source.index, 1);
-      newTasks.splice(destination.index, 0, removed);
-
-      setSelectedProject((prev) => ({
+    setSelectedProject((prev) => {
+      if (!prev) return prev;
+      return {
         ...prev,
-        tasks: newTasks,
-      }));
-
-      setProjects(
-        projects.map((project) =>
-          project.id === selectedProject.id
-            ? { ...project, tasks: newTasks }
-            : project
-        )
-      );
-    } else {
-      // Handle moving between columns
-      handleStatusChange(draggableId, destination.droppableId as TaskStatus);
-    }
+        tasks: prev.tasks.filter((t) => t.id !== taskId),
+      };
+    });
   };
 
   const groupedTasks = {
-    pending: selectedProject.tasks.filter((task) => task.status === "pending"),
-    in_progress: selectedProject.tasks.filter(
+    pending: selectedProject?.tasks.filter((task) => task.status === "pending") || [],
+    in_progress: selectedProject?.tasks.filter(
       (task) => task.status === "in_progress"
-    ),
-    completed: selectedProject.tasks.filter(
+    ) || [],
+    completed: selectedProject?.tasks.filter(
       (task) => task.status === "completed"
-    ),
+    ) || [],
   };
 
   const statusHeaders = {
@@ -247,7 +289,7 @@ export default function ClientPage() {
         <ProjectsSidebar
           projects={projects}
           selectedProject={selectedProject}
-          onProjectSelect={setSelectedProject}
+          onProjectSelect={handleProjectSelect}
           onAddProject={() => setIsNewProjectDialogOpen(true)}
         />
 
@@ -256,10 +298,9 @@ export default function ClientPage() {
           groupedTasks={groupedTasks}
           statusHeaders={statusHeaders}
           onAddTask={() => setIsNewTaskDialogOpen(true)}
-          onStatusChange={handleStatusChange}
+          onStatusChange={handleTaskStatusUpdate}
           onEditTask={setEditTask}
           onDeleteTask={handleDeleteTask}
-          onDragEnd={handleDragEnd}
         />
 
         <NewTaskDialog
