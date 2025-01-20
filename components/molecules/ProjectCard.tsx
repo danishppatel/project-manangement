@@ -1,24 +1,64 @@
-import { Card, CardContent, Box, Typography, Chip } from '@mui/material';
+import { 
+  Card, 
+  CardContent, 
+  Box, 
+  Typography, 
+  Chip, 
+  IconButton,
+  Menu,
+  MenuItem
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import type { Project } from '@/types/project';
 import ProgressBar from '../atoms/ProgressBar';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface ProjectCardProps {
   project: Project;
+  onEdit?: (project: Project) => void;
+  onDelete?: (project: Project) => void;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
-  console.log(project)
+export default function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const router = useRouter();
-  
-  const completedTasks = project.tasks.filter(task => task.status === 'completed').length;
-  const totalTasks = project.tasks.length;
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const tasks = project.tasks || [];
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const totalTasks = tasks.length;
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const taskStats = {
-    completed: project.tasks.filter(task => task.status === 'completed').length,
-    inProgress: project.tasks.filter(task => task.status === 'in_progress').length,
-    pending: project.tasks.filter(task => task.status === 'pending').length
+    completed: completedTasks,
+    inProgress: tasks.filter(task => task.status === 'in_progress').length,
+    pending: tasks.filter(task => task.status === 'pending').length
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevent card click when clicking menu
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevent navigation
+    handleClose();
+    onEdit?.(project);
+  };
+
+  const handleDelete = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevent navigation
+    handleClose();
+    if (onDelete) {
+      onDelete(project);
+    }
   };
 
   return (
@@ -37,10 +77,71 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       }}
     >
       <CardContent>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="h6" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
-            {project.name}
-          </Typography>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box>
+            <Typography variant="h6" sx={{ color: 'white', fontWeight: 600, mb: 1 }}>
+              {project.name}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'rgba(255,255,255,0.7)',
+                mb: 2,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {project.description}
+            </Typography>
+          </Box>
+          
+          <IconButton 
+            onClick={handleClick}
+            size="small" 
+            sx={{ 
+              color: 'rgba(255,255,255,0.7)',
+              '&:hover': {
+                color: 'white',
+                backgroundColor: 'rgba(255,255,255,0.1)'
+              }
+            }}
+          >
+            <MoreHorizIcon fontSize="small" />
+          </IconButton>
+          
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            onClick={(e) => e.stopPropagation()} // Prevent card click when menu is open
+            PaperProps={{
+              sx: {
+                bgcolor: '#2C2C2C',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                '& .MuiMenuItem-root': {
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  gap: 1.5,
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.1)'
+                  }
+                }
+              }
+            }}
+          >
+            <MenuItem onClick={handleEdit}>
+              <EditIcon fontSize="small" sx={{ color: '#0052CC' }} />
+              Edit Project
+            </MenuItem>
+            <MenuItem onClick={handleDelete} sx={{ color: '#FF4D4F !important' }}>
+              <DeleteIcon fontSize="small" sx={{ color: '#FF4D4F' }} />
+              Delete Project
+            </MenuItem>
+          </Menu>
         </Box>
 
         <Box sx={{ mb: 3 }}>

@@ -1,29 +1,68 @@
 import DialogHeader from "../atoms/DialogHeader";
-import ProjectDialogContent from "../molecules/ProjectDialogContent";
 import StyledDialog from "../atoms/StyledDialog";
 import AddIcon from "@mui/icons-material/Add";
+import { DialogContent } from "@mui/material";
+import { useState } from "react";
+import StyledTextField from "../atoms/StyledTextField";
+import DialogFooter from "../atoms/DialogFooter";
 
 interface NewProjectDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (data: { name: string }) => void;
+  onAdd: (data: { name: string; description: string }) => void;
 }
 
-const NewProjectDialog = ({ open, onClose, onAdd }: NewProjectDialogProps) => (
-  <StyledDialog open={open} onClose={onClose}>
-    <DialogHeader
-      icon={AddIcon}
-      title="Create New Project"
-      subtitle="Add a new project to your workspace"
-    />
+const NewProjectDialog = ({ open, onClose, onAdd }: NewProjectDialogProps) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: ''
+  });
 
-    <ProjectDialogContent
-      onSubmit={(data) => {
-        onAdd(data);
-        onClose();
-      }}
-    />
-  </StyledDialog>
-);
+  const handleSubmit = () => {
+    if (formData.name && formData.description) {
+      onAdd(formData);
+      setFormData({ name: '', description: '' });
+    }
+  };
+
+  return (
+    <StyledDialog open={open} onClose={onClose}>
+      <DialogHeader
+        icon={AddIcon}
+        title="Create New Project"
+        subtitle="Add a new project to your workspace"
+      />
+
+      <DialogContent sx={{ p: 3 }}>
+        <StyledTextField
+          autoFocus
+          label="Project Name"
+          placeholder="Enter project name"
+          fullWidth
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          sx={{ mb: 3 }}
+        />
+
+        <StyledTextField
+          label="Description"
+          placeholder="Enter project description"
+          fullWidth
+          multiline
+          rows={4}
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+        />
+      </DialogContent>
+
+      <DialogFooter
+        onClose={onClose}
+        onSubmit={handleSubmit}
+        submitLabel="Create Project"
+        isSubmitDisabled={!formData.name || !formData.description}
+      />
+    </StyledDialog>
+  );
+};
 
 export default NewProjectDialog; 

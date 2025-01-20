@@ -5,15 +5,26 @@ import type { Project } from '@/types/project';
 interface ProjectsContentProps {
   projects: Project[];
   onAddProject: () => void;
+  onUpdateProject: (project: Project) => void;
+  onDeleteProject: (project: Project) => void;
 }
 
-const ProjectsContent = ({ projects, onAddProject }: ProjectsContentProps) => (
+const ProjectsContent = ({ 
+  projects, 
+  onAddProject,
+  onUpdateProject,
+  onDeleteProject 
+}: ProjectsContentProps) => (
   <>
     <ProjectsHeader 
       projectCount={projects.length}
       onAddProject={onAddProject}
     />
-    <ProjectsGrid projects={projects} />
+    <ProjectsGrid 
+      projects={projects}
+      onEdit={onUpdateProject}
+      onDelete={onDeleteProject}
+    />
   </>
 );
 
