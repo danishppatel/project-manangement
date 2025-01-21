@@ -45,7 +45,7 @@ export async function getAllProjects(client: ApolloClient<NormalizedCacheObject>
   try {
     const { data } = await client.query({
       query: getProjects,
-      fetchPolicy: 'network-only'
+      fetchPolicy: 'cache-first'
     });
     return data.projects;
   } catch (error) {
@@ -205,7 +205,7 @@ export async function updateExistingTask(
   client: ApolloClient<NormalizedCacheObject>,
   id: string,
   input: UpdateTaskInput,
-  projectId: string
+  projectId?: string
 ): Promise<Task> {
   try {
     const { data } = await client.mutate({

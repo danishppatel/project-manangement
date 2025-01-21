@@ -3,7 +3,7 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  status: 'PENDING' | 'INPROGRESS' | 'COMPLETED';
   assignedTo: string;
 }
 
@@ -11,11 +11,12 @@ export interface Project {
   id: string;
   name: string;
   description: string;
+  createdAt: string;
   tasks?: Array<{
     id: string;
     title: string;
     description: string;
-    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+    status: 'PENDING' | 'INPROGRESS' | 'COMPLETED';
     assignedTo: string;
   }>;
 }

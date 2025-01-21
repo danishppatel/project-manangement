@@ -1,4 +1,4 @@
-import ClientPage from '@/components/templates/ClientPage';
+import ProjectDetailPage from '@/components/templates/ProjectDetailPage';
 
 interface Props {
     params: Promise<{
@@ -7,5 +7,5 @@ interface Props {
 }
 export default async function ProjectPage({ params }: Props) {
     const id = await params
-    return <ClientPage projectId={id.id} />;
+    return <ProjectDetailPage projectId={id.id} />;
 }

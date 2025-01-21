@@ -11,7 +11,7 @@ export interface Project {
   name: string;
   description?: string;
   tasks?: TaskType[];
-  createdAt: string;
+  createdAt?: string;
 }
 
 export type TaskStatus = "PENDING" | "INPROGRESS" | "COMPLETED";

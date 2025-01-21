@@ -9,6 +9,7 @@ import EditProjectDialog from '@/components/organisms/EditProjectDialog';
 import { getAllProjects, createNewProject, updateExistingProject, deleteExistingProject, getAllTasks } from '@/lib/api';
 import client from '@/graphql/apollo-client';
 import PageLayout from '../atoms/PageLayout';
+import ConfirmDialog from '@/components/molecules/ConfirmDialog';
 
 export default function ClientPageContainer() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -17,6 +18,7 @@ export default function ClientPageContainer() {
   const [error, setError] = useState<Error | null>(null);
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,17 +74,20 @@ export default function ClientPageContainer() {
   };
 
   const handleDeleteProject = (project: Project) => {
-    deleteExistingProject(client, project.id)
-      .then(() => {
-        setProjects(prev => prev.filter(p => p.id !== project.id));
-      })
-      .catch(error => {
-        console.error('Failed to delete project:', error);
-        // Handle error
-      });
+    setDeleteProjectId(project.id);
   };
 
-
+  const handleDeleteConfirm = async () => {
+    if (deleteProjectId) {
+      try {
+        await deleteExistingProject(client, deleteProjectId);
+        setProjects(prev => prev.filter(p => p.id !== deleteProjectId));
+        setDeleteProjectId(null);
+      } catch (error) {
+        setError(error instanceof Error ? error : new Error('Failed to delete project'));
+      }
+    }
+  };
 
   return (
     <PageLayout>
@@ -111,6 +116,13 @@ export default function ClientPageContainer() {
         onSave={handleUpdateProject}
         project={editingProject}
         error={error?.message}
+      />
+      <ConfirmDialog
+        open={!!deleteProjectId}
+        title="Delete Project"
+        message="Are you sure you want to delete this project? All tasks within this project will be permanently deleted. This action cannot be undone."
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteProjectId(null)}
       />
     </PageLayout>
   );

@@ -1,7 +1,7 @@
 import { Paper, Drawer, useMediaQuery, useTheme } from "@mui/material";
 import SectionHeader from "../molecules/SectionHeader";
 import ProjectsList from "./ProjectsList";
-import { Project } from "../../types";
+import { Project } from "../../types/project";
 import { useState } from "react";
 
 interface ProjectsSidebarProps {

@@ -1,25 +1,27 @@
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
+import { useMemo } from 'react';
 import ProjectHeader from "../molecules/ProjectHeader";
 import { TaskStatus } from "@/types";
-
-import { Project } from "@/types";
-import { TaskType } from "@/types";
-import { Box, Typography } from "@mui/material";
-import Task from "../Task";
-import LoadingSpinner from "../atoms/LoadingSpinner";
+import { Project } from "@/types/project";
+import { Task } from "@/types/task";
+import { Box } from "@mui/material";
+import TaskColumn from "../organisms/TaskColumn";
+import { updateExistingTask } from "@/lib/api";
+import client from "@/graphql/apollo-client";
 
 interface TasksSectionProps {
   selectedProject?: Project;
   groupedTasks: {
-    pending: TaskType[];
-    in_progress: TaskType[];
-    completed: TaskType[];
+    pending: Task[];
+    in_progress: Task[];
+    completed: Task[];
   };
   statusHeaders: {
     [key: string]: { title: string; color: string };
   };
   onAddTask: () => void;
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
-  onEditTask: (task: TaskType) => void;
+  onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   loading: boolean;
 }
@@ -33,118 +35,100 @@ const TasksSection = ({
   onStatusChange,
   onEditTask,
   onDeleteTask,
-}: TasksSectionProps) => (
-  <Box
-    sx={{
-      flexGrow: 1,
-      p: { xs: 2, sm: 3 },
-      width: { xs: "100%", md: "65%" },
-      bgcolor: "#1E1F21",
-      overflowY: "auto",
-    }}
-  >
-    <ProjectHeader
-      name={selectedProject?.name}
-      taskCount={selectedProject?.tasks?.length}
-      onAddTask={onAddTask}
-    />
+}: TasksSectionProps) => {
+  // Memoize the status map to prevent recreating on each render
+  const statusMap = useMemo(() => ({
+    'pending': 'PENDING',
+    'in_progress': 'INPROGRESS',
+    'completed': 'COMPLETED'
+  } as const), []);
 
-    {/* <DragDropClient
-      onDragEnd={({ source, destination, draggableId }) => {
-        if (!destination) return;
+  const handleDragEnd = async (result: DropResult) => {
+    const { destination, source, draggableId } = result;
 
-        onDragEnd({
-            source: { droppableId: source, index: 0 },
-            destination: { droppableId: destination, index: 0 },
-            draggableId,
-            mode: "FLUID",
-            reason: "DROP",
-            combine: null,
-            type: ""
-        });
+    if (!destination) return;
+
+    const sourceKey = source.droppableId.toLowerCase() as keyof typeof groupedTasks;
+    const destinationKey = destination.droppableId.toLowerCase() as keyof typeof groupedTasks;
+
+    if (sourceKey === destinationKey && source.index === destination.index) {
+      return; // No movement occurred
+    }
+
+    // Optimistically update UI first
+    const newStatus = statusMap[destinationKey];
+    onStatusChange(draggableId, newStatus);
+
+    // Then update backend
+    try {
+      await updateExistingTask(
+        client,
+        draggableId,
+        { status: newStatus },
+        selectedProject?.id
+      );
+    } catch (error) {
+      console.error('Failed to update task status:', error);
+      // Revert the optimistic update on error
+      onStatusChange(draggableId, statusMap[sourceKey]);
+    }
+  };
+
+  // Memoize the columns to prevent unnecessary re-renders
+  const columns = useMemo(() => (
+    (Object.keys(groupedTasks) as Array<keyof typeof groupedTasks>).map(
+      (status) => (
+        <TaskColumn
+          key={`${selectedProject?.id}-${status}`}
+          status={status}
+          tasks={groupedTasks[status]}
+          statusHeader={statusHeaders[status]}
+          taskCount={groupedTasks[status].length}
+          loading={loading}
+          selectedProjectId={selectedProject?.id}
+          onStatusChange={onStatusChange}
+          onEditTask={onEditTask}
+          onDeleteTask={onDeleteTask}
+        />
+      )
+    )
+  ), [selectedProject?.id, groupedTasks, statusHeaders, loading, onStatusChange, onEditTask, onDeleteTask]);
+
+  return (
+    <Box
+      sx={{
+        flexGrow: 1,
+        p: { xs: 2, sm: 3 },
+        width: { xs: "100%", md: "65%" },
+        bgcolor: "#1E1F21",
+        overflowY: "auto",
       }}
-    > */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: 3,
-          gridTemplateColumns: {
-            xs: "1fr",            // 1 column for mobile (<768px)
-            md: "repeat(3, 3fr)"  // 3 columns for screens >= 768px
-          },
-        }}
+    >
+      <ProjectHeader
+        name={selectedProject?.name}
+        taskCount={Object.values(groupedTasks).flat().length}
+        onAddTask={onAddTask}
+      />
+
+      <DragDropContext 
+        onDragEnd={handleDragEnd}
+        key={selectedProject?.id || 'no-project'}
       >
-        {(Object.keys(groupedTasks) as Array<keyof typeof groupedTasks>).map(
-          (status) => (
-            <Box
-              key={status}
-              sx={{
-                minWidth: 0,
-              }}
-            >
-              {/* Status Header */}
-              <Box
-                sx={{
-                  mb: 2,
-                  p: 2,
-                  backgroundColor: `${statusHeaders[status].color}10`,
-                  borderRadius: "8px",
-                  border: `1px solid ${statusHeaders[status].color}30`,
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      backgroundColor: statusHeaders[status].color,
-                    }}
-                  />
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      color: "white",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {statusHeaders[status].title}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      ml: "auto",
-                      color: "rgba(255,255,255,0.5)",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {groupedTasks[status].length}
-                  </Typography>
-                </Box>
-              </Box>
-                    
-              {/* <DroppableClient status={status}> */}
-              {loading ? <LoadingSpinner /> : (
-              <div>
-                {groupedTasks[status].map((task, index) => (
-                  <Task
-                    key={task.id}
-                    {...task}
-                    projectId={selectedProject?.id || ''}
-                    index={index}
-                    onStatusChange={onStatusChange}
-                    onEdit={onEditTask}
-                    onDelete={onDeleteTask}
-                  />
-                ))}
-                </div>
-              )}
-              {/* </DroppableClient> */}
-            </Box>
-          )
-        )}
-      </Box>
-    {/* </DragDropClient> */}
-  </Box>
-);
+        <Box
+          sx={{
+            display: "grid",
+            gap: 3,
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "repeat(3, 3fr)"
+            },
+          }}
+        >
+          {columns}
+        </Box>
+      </DragDropContext>
+    </Box>
+  );
+};
 
 export default TasksSection;

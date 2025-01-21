@@ -14,6 +14,7 @@ const ProjectHeader = ({ name, taskCount, onAddTask }: ProjectHeaderProps) => (
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
+      height: "70px",
     }}
   >
     <Box>

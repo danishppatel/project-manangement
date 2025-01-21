@@ -4,19 +4,22 @@ import {
   Select,
   SelectProps,
   FormControlProps,
+  SelectChangeEvent,
 } from "@mui/material";
 import { ReactNode } from "react";
 
-interface StyledSelectProps extends Omit<SelectProps, "label"> {
+interface StyledSelectProps extends Omit<SelectProps, "label" | "onChange"> {
   label: string;
   children: ReactNode;
   formControlProps?: FormControlProps;
+  onChange?: (event: SelectChangeEvent<unknown>, child: ReactNode) => void;
 }
 
 const StyledSelect = ({
   label,
   children,
   formControlProps,
+  onChange,
   ...props
 }: StyledSelectProps) => (
   <FormControl
@@ -46,7 +49,11 @@ const StyledSelect = ({
     }}
   >
     <InputLabel>{label}</InputLabel>
-    <Select label={label} {...props}>
+    <Select 
+      label={label} 
+      onChange={onChange}
+      {...props}
+    >
       {children}
     </Select>
   </FormControl>

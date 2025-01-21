@@ -1,6 +1,6 @@
-import { DroppableClient } from "../DragDropClient";
-import DraggableProject from "../DraggableProject";
-import { Project } from "../../types";
+import { Box } from "@mui/material";
+import ProjectItem from "./ProjectItem";
+import { Project } from "../../types/project";
 
 interface ProjectsListProps {
   projects: Project[];
@@ -13,17 +13,16 @@ const ProjectsList = ({
   selectedProjectId,
   onProjectSelect,
 }: ProjectsListProps) => (
-  <DroppableClient status="project">
-    {projects?.map((project, index) => (
-      <DraggableProject
+  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    {projects?.map((project) => (
+      <ProjectItem
         key={project.id}
         project={project}
-        index={index}
         isSelected={selectedProjectId === project.id}
         onSelect={() => onProjectSelect(project)}
       />
     ))}
-  </DroppableClient>
+  </Box>
 );
 
 export default ProjectsList;
