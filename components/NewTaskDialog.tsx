@@ -1,6 +1,6 @@
 "use client";
 
-import { DialogContent, MenuItem } from "@mui/material";
+import { DialogContent, MenuItem, Typography } from "@mui/material";
 import { useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import { TaskStatus } from "./Task";
@@ -19,6 +19,7 @@ interface NewTaskDialogProps {
     assignedTo?: string;
     status: TaskStatus;
   }) => void;
+  error?: string;
 }
 
 // Dummy team members data
@@ -29,7 +30,7 @@ const teamMembers = [
   { id: "4", name: "Sarah Williams" },
 ];
 
-const NewTaskDialog = ({ open, onClose, onAdd }: NewTaskDialogProps) => {
+const NewTaskDialog = ({ open, onClose, onAdd, error }: NewTaskDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
@@ -59,6 +60,21 @@ const NewTaskDialog = ({ open, onClose, onAdd }: NewTaskDialogProps) => {
       />
 
       <DialogContent sx={{ p: 3 }}>
+        {error && (
+          <Typography 
+            color="error" 
+            sx={{ 
+              mb: 2, 
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1 
+            }}
+          >
+            {error}
+          </Typography>
+        )}
+
         <StyledTextField
           autoFocus
           label="Task Title"

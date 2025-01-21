@@ -1,6 +1,6 @@
 "use client";
 
-import { DialogContent, MenuItem, SelectChangeEvent } from "@mui/material";
+import { DialogContent, MenuItem, SelectChangeEvent, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { TaskStatus } from "./Task";
@@ -19,14 +19,17 @@ interface EditTaskDialogProps {
     description: string;
     assignedTo?: string;
     status: TaskStatus;
+    error?: string;
   }) => void;
   task: {
     id: string;
     title: string;
     description: string;
-    assignedTo: string;
+    assignedTo?: string;
     status: TaskStatus;
+    error?: string;
   } | null;
+  error?: string;
 }
 
 const teamMembers = [
@@ -41,6 +44,7 @@ const EditTaskDialog = ({
   onClose,
   onSave,
   task,
+  error,
 }: EditTaskDialogProps) => {
   const [formData, setFormData] = useState({
     title: "",
@@ -79,7 +83,7 @@ const EditTaskDialog = ({
       onClose();
     }
   };
-
+  console.log(error)
   const handleChange =
     (field: string) =>
     (
@@ -102,6 +106,20 @@ const EditTaskDialog = ({
       />
 
       <DialogContent sx={{ p: 3 }}>
+          {error && (
+              <Typography 
+                color="error" 
+                sx={{ 
+                  mb: 2, 
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1 
+                }}
+              >
+            {error}
+          </Typography>
+        )}
         <StyledTextField
           autoFocus
           label="Task Title"

@@ -28,6 +28,7 @@ const ProjectsSidebar = ({
         onAddClick={onAddProject}
         showDrawerIcon={false}
       />
+      
       <ProjectsList
         projects={projects}
         selectedProjectId={selectedProject?.id}

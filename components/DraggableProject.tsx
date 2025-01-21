@@ -37,8 +37,8 @@ const DraggableProject = ({ project, index, isSelected, onSelect }: DraggablePro
           }}
         >
           <ListItemText 
-            primary={project.name}
-            secondary={`${project?.tasks?.length} tasks`}
+            primary={project?.name}
+            secondary={`${project?.tasks?.length || 0} tasks`}
             primaryTypographyProps={{
               fontWeight: 500,
               color: 'inherit'

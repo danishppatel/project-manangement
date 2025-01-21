@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { Project } from '@/types/project';
+import type { Task } from '@/types/task';
 import ProgressBar from '../atoms/ProgressBar';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import EditIcon from '@mui/icons-material/Edit';
@@ -20,22 +21,24 @@ interface ProjectCardProps {
   project: Project;
   onEdit?: (project: Project) => void;
   onDelete?: (project: Project) => void;
+  tasks: Task[];
 }
 
-export default function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+export default function ProjectCard({ project, onEdit, onDelete, tasks }: ProjectCardProps) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  const tasks = project.tasks || [];
-  const completedTasks = tasks.filter(task => task.status === 'completed').length;
-  const totalTasks = tasks.length;
+  console.log(tasks)
+
+  const completedTasks = tasks?.filter(task => task.status === 'COMPLETED').length;
+  const totalTasks = tasks?.length;
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const taskStats = {
     completed: completedTasks,
-    inProgress: tasks.filter(task => task.status === 'in_progress').length,
-    pending: tasks.filter(task => task.status === 'pending').length
+    inProgress: tasks?.filter(task => task.status === 'INPROGRESS').length,
+    pending: tasks?.filter(task => task.status === 'PENDING').length
   };
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {

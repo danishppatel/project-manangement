@@ -6,7 +6,11 @@ export const getProjects = gql`
       id
       name
       description
-      createdAt
+      tasks {
+        id
+        title
+        status
+      }
     }
   }
 `;
@@ -44,8 +48,6 @@ export const deleteProject = gql`
   mutation DeleteProject($id: ID!) {
     deleteProject(id: $id) {
       id
-      name
-      description
     }
   }
 `;

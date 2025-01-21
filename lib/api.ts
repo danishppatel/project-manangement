@@ -74,8 +74,7 @@ export async function createNewProject(
     });
     return data.createProject;
   } catch (error) {
-    console.error('Failed to create project:', error);
-    throw new Error('Failed to create project');
+    throw new Error(error.message);
   }
 }
 
@@ -101,8 +100,7 @@ export async function updateExistingProject(
     });
     return data.updateProject;
   } catch (error) {
-    console.error('Failed to update project:', error);
-    throw new Error('Failed to update project');
+    throw new Error(error.message);
   }
 }
 
@@ -130,8 +128,7 @@ export async function deleteExistingProject(
       }
     });
   } catch (error) {
-    console.error('Failed to delete project:', error);
-    throw new Error('Failed to delete project');
+    throw new Error(error.message);
   }
 }
 
@@ -146,8 +143,7 @@ export async function getAllTasks(
     });
     return data.tasks;
   } catch (error) {
-    console.error('Failed to fetch tasks:', error);
-    throw new Error('Failed to fetch tasks');
+    throw new Error(error.message);
   }
 }
 
@@ -163,8 +159,7 @@ export async function getTasksByProject(
     });
     return data.tasksByProject;
   } catch (error) {
-    console.error('Failed to fetch project tasks:', error);
-    throw new Error('Failed to fetch project tasks');
+    throw new Error(error.message);
   }
 }
 
@@ -202,8 +197,7 @@ export async function createNewTask(
     });
     return data.createTask;
   } catch (error) {
-    console.error('Failed to create task:', error);
-    throw new Error('Failed to create task');
+    throw new Error(error.message);
   }
 }
 
@@ -236,8 +230,7 @@ export async function updateExistingTask(
     });
     return data.updateTask;
   } catch (error) {
-    console.error('Failed to update task:', error);
-    throw new Error('Failed to update task');
+    throw new Error(error.message);
   }
 }
 
@@ -268,7 +261,6 @@ export async function deleteExistingTask(
       }
     });
   } catch (error) {
-    console.error('Failed to delete task:', error);
-    throw new Error('Failed to delete task');
+    throw new Error(error.message);
   }
 }

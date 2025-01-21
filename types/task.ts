@@ -1,4 +1,6 @@
-export type TaskStatus = "pending" | "in_progress" | "completed";
+import { Project } from "./project";
+
+export type TaskStatus = "PENDING" | "INPROGRESS" | "COMPLETED";
 
 export interface Task {
   id: string;
@@ -6,4 +8,5 @@ export interface Task {
   description: string;
   assignedTo: string;
   status: TaskStatus;
+  project: Project;
 }

@@ -8,8 +8,6 @@ import EditTaskDialog from "../EditTaskDialog";
 import NewProjectDialog from "../organisms/NewProjectDialog";
 import ProjectsSidebar from "../organisms/ProjectsSidebar";
 import TasksSection from "./TasksSection";
-import LoadingSpinner from '@/components/atoms/LoadingSpinner';
-import ErrorMessage from '@/components/atoms/ErrorMessage';
 import { useRouter } from "next/navigation";
 import { getAllProjects, createNewProject, createNewTask, getTasksByProject, deleteExistingTask, updateExistingTask } from "@/lib/api";
 import client from "@/graphql/apollo-client";
@@ -50,7 +48,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
         setIsLoading(true);
         const data = await getAllProjects(client);
         setProjects(data as Project[]);
-        
+        console.log(data)
         // Set selected project after we have the data
         if (data && data.length > 0) {
           const project = data.find((p) => p.id === projectId);
@@ -107,30 +105,22 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     if (!selectedProject) return;
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       
-      // Create the task input with default status and selected project
       const taskInput = {
         title: newTask.title,
         description: newTask.description,
-        status: "PENDING", // Default status
+        status: "PENDING",
         projectId: selectedProject.id
       };
 
       // Call the API to create new task
       const createdTask = await createNewTask(client, taskInput);
       
-      // Update local state with the new task
-      setSelectedProject((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          tasks: [...(prev.tasks || []), createdTask],
-        };
-      });
-
-      // Close the dialog
+      // Update local state directly
+      setTasks(prevTasks => [...prevTasks, createdTask]);
       setIsNewTaskDialogOpen(false);
+      setError(null);
       
     } catch (error) {
       setError(error instanceof Error ? error : new Error('Failed to create task'));
@@ -143,15 +133,13 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     id: string;
     title: string;
     description: string;
-    assignedTo: string;
+    assignedTo?: string;
     status: TaskStatus;
   }) => {
     if (!selectedProject) return;
 
     try {
-      setIsLoading(true);
       
-      // Prepare the update input
       const updateInput = {
         title: task.title,
         description: task.description,
@@ -159,7 +147,6 @@ export default function ClientPage({ projectId }: { projectId: string }) {
         userId: task.assignedTo
       };
 
-      // Call the API to update the task
       const updatedTask = await updateExistingTask(
         client,
         task.id,
@@ -167,12 +154,11 @@ export default function ClientPage({ projectId }: { projectId: string }) {
         selectedProject.id
       );
       
-      // Update local state
+      // Update local state directly
       setTasks(prevTasks => 
         prevTasks.map(t => t.id === task.id ? updatedTask : t)
       );
       
-      // Close the edit dialog
       setEditTask(null);
       setError(null);
     } catch (error) {
@@ -186,14 +172,11 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     if (!selectedProject) return;
 
     try {
-      setIsLoading(true);
       
-      // Call the API to delete the task
       await deleteExistingTask(client, taskId, selectedProject.id);
       
-      // Update local state
+      // Update local state directly
       setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-      
       setError(null);
     } catch (error) {
       setError(error instanceof Error ? error : new Error('Failed to delete task'));
@@ -221,7 +204,6 @@ export default function ClientPage({ projectId }: { projectId: string }) {
 
   const handleAddProject = async ({ name, description }: { name: string; description?: string }) => {
     try {
-      setIsLoading(true);
       // Call the API to create new project
       const newProject = await createNewProject(client, {
         name,
@@ -238,26 +220,27 @@ export default function ClientPage({ projectId }: { projectId: string }) {
       setIsLoading(false);
     }
   };
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+  // if (isLoading) {
+  //   return <LoadingSpinner />;
+  // }
 
-  if (error) {
-    return (
-      <ErrorMessage 
-        message="Failed to load projects"
-        error={error}
-        onRetry={() => {
-          setError(null);
-          setIsLoading(true);
-          getAllProjects(client)
-            .then(data => setProjects(data as Project[]))
-            .catch(err => setError(err))
-            .finally(() => setIsLoading(false));
-        }}
-      />
-    );
-  }
+  // if (error) {
+  //   console.error(error)
+  //   return (
+  //     <ErrorMessage 
+  //       message={error.message}
+  //       error={error}
+  //       onRetry={() => {
+  //         setError(null);
+  //         setIsLoading(true);
+  //         getAllProjects(client)
+  //           .then(data => setProjects(data as Project[]))
+  //           .catch(err => setError(err))
+  //           .finally(() => setIsLoading(false));
+  //       }}
+  //     />
+  //   );
+  // }
 
   return (
     // <DragDropClient onDragEnd={handleDragEnd}>
@@ -284,25 +267,38 @@ export default function ClientPage({ projectId }: { projectId: string }) {
           onStatusChange={handleTaskStatusUpdate}
           onEditTask={setEditTask}
           onDeleteTask={handleDeleteTask}
+          loading={isLoading}
         />
 
         <NewTaskDialog
           open={isNewTaskDialogOpen}
-          onClose={() => setIsNewTaskDialogOpen(false)}
+          onClose={() => {
+            setIsNewTaskDialogOpen(false);
+            setError(null);
+          }}
           onAdd={handleAddTask}
+          error={error?.message}
         />
 
         <EditTaskDialog
           open={!!editTask}
-          onClose={() => setEditTask(null)}
+          onClose={() => {
+            setEditTask(null);
+            setError(null);
+          }}
           onSave={handleEditTask}
           task={editTask}
+          error={error?.message}
         />
 
         <NewProjectDialog
           open={isNewProjectDialogOpen}
-          onClose={() => setIsNewProjectDialogOpen(false)}
+          onClose={() => {
+            setIsNewProjectDialogOpen(false);
+            setError(null);
+          }}
           onAdd={handleAddProject}
+          error={error?.message}
         />
       </Box>
     // </DragDropClient>

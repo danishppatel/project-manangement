@@ -1,8 +1,9 @@
 export interface Task {
+  projectId: string;
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
   assignedTo: string;
 }
 
@@ -14,7 +15,7 @@ export interface Project {
     id: string;
     title: string;
     description: string;
-    status: 'pending' | 'in_progress' | 'completed';
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
     assignedTo: string;
   }>;
 }

@@ -14,4 +14,4 @@ export interface Project {
   createdAt: string;
 }
 
-export type TaskStatus = "pending" | "in_progress" | "completed";
+export type TaskStatus = "PENDING" | "INPROGRESS" | "COMPLETED";

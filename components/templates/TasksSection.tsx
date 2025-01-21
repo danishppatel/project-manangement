@@ -5,6 +5,7 @@ import { Project } from "@/types";
 import { TaskType } from "@/types";
 import { Box, Typography } from "@mui/material";
 import Task from "../Task";
+import LoadingSpinner from "../atoms/LoadingSpinner";
 
 interface TasksSectionProps {
   selectedProject?: Project;
@@ -20,9 +21,11 @@ interface TasksSectionProps {
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
   onEditTask: (task: TaskType) => void;
   onDeleteTask: (taskId: string) => void;
+  loading: boolean;
 }
 
 const TasksSection = ({
+  loading,
   selectedProject,
   groupedTasks,
   statusHeaders,
@@ -118,8 +121,10 @@ const TasksSection = ({
                   </Typography>
                 </Box>
               </Box>
-
+                    
               {/* <DroppableClient status={status}> */}
+              {loading ? <LoadingSpinner /> : (
+              <div>
                 {groupedTasks[status].map((task, index) => (
                   <Task
                     key={task.id}
@@ -131,6 +136,8 @@ const TasksSection = ({
                     onDelete={onDeleteTask}
                   />
                 ))}
+                </div>
+              )}
               {/* </DroppableClient> */}
             </Box>
           )

@@ -6,12 +6,14 @@ import DialogHeader from "../atoms/DialogHeader";
 import DialogFooter from "../atoms/DialogFooter";
 import StyledTextField from "../atoms/StyledTextField";
 import type { Project } from "@/types/project";
+import { Typography } from "@mui/material";
 
 interface EditProjectDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (project: { id: string; name: string; description: string }) => void;
   project: Project | null;
+  error?: string;
 }
 
 const EditProjectDialog = ({
@@ -19,6 +21,7 @@ const EditProjectDialog = ({
   onClose,
   onSave,
   project,
+  error,
 }: EditProjectDialogProps) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -67,6 +70,20 @@ const EditProjectDialog = ({
       />
 
       <DialogContent sx={{ p: 3 }}>
+        {error && (
+          <Typography 
+            color="error" 
+            sx={{ 
+              mt: 2, 
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1 
+            }}
+          >
+            {error}
+          </Typography>
+        )}
         <StyledTextField
           autoFocus
           label="Project Name"

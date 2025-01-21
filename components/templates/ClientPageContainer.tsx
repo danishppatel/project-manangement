@@ -2,37 +2,41 @@
 
 import { useState, useEffect } from 'react';
 import type { Project } from '@/types/project';
+import type { Task } from '@/types/task';
 import ProjectsContent from '@/components/organisms/ProjectsContent';
 import NewProjectDialog from '@/components/organisms/NewProjectDialog';
 import EditProjectDialog from '@/components/organisms/EditProjectDialog';
-import { getAllProjects, createNewProject, updateExistingProject, deleteExistingProject } from '@/lib/api';
+import { getAllProjects, createNewProject, updateExistingProject, deleteExistingProject, getAllTasks } from '@/lib/api';
 import client from '@/graphql/apollo-client';
-import LoadingSpinner from '@/components/atoms/LoadingSpinner';
-import ErrorMessage from '@/components/atoms/ErrorMessage';
 import PageLayout from '../atoms/PageLayout';
 
 export default function ClientPageContainer() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getAllProjects(client);
-        setProjects(data);
+        const [projectsData, tasksData] = await Promise.all([
+          getAllProjects(client),
+          getAllTasks(client)
+        ]);
+        setProjects(projectsData);
+        setTasks(tasksData);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch projects'));
+        setError(err instanceof Error ? err : new Error('Failed to fetch data'));
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProjects();
+    fetchData();
   }, []);
 
   const handleAddProject = (projectData: { name: string; description: string }) => {
@@ -78,45 +82,35 @@ export default function ClientPageContainer() {
       });
   };
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
 
-  if (error) {
-    return (
-      <ErrorMessage 
-        message="Failed to load projects"
-        error={error}
-        onRetry={() => {
-          setError(null);
-          setIsLoading(true);
-          getAllProjects(client)
-            .then(data => setProjects(data))
-            .catch(err => setError(err))
-            .finally(() => setIsLoading(false));
-        }}
-      />
-    );
-  }
 
   return (
     <PageLayout>
+      { tasks.length > 0 && (
       <ProjectsContent 
         projects={projects}
         onAddProject={() => setIsNewProjectDialogOpen(true)}
         onUpdateProject={(project) => setEditingProject(project)}
         onDeleteProject={handleDeleteProject}
+        isLoading={isLoading}
+        tasks={tasks}
       />
+      )}
       <NewProjectDialog
         open={isNewProjectDialogOpen}
         onClose={() => setIsNewProjectDialogOpen(false)}
         onAdd={handleAddProject}
+        error={error?.message}
       />
       <EditProjectDialog
         open={Boolean(editingProject)}
-        onClose={() => setEditingProject(null)}
+        onClose={() => {
+          setEditingProject(null)
+          setError(null)
+        }}
         onSave={handleUpdateProject}
         project={editingProject}
+        error={error?.message}
       />
     </PageLayout>
   );
