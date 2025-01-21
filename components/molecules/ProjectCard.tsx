@@ -29,7 +29,6 @@ export default function ProjectCard({ project, onEdit, onDelete, tasks }: Projec
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  console.log(tasks)
 
   const completedTasks = tasks?.filter(task => task.status === 'COMPLETED').length;
   const totalTasks = tasks?.length;

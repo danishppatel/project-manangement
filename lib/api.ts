@@ -45,7 +45,7 @@ export async function getAllProjects(client: ApolloClient<NormalizedCacheObject>
   try {
     const { data } = await client.query({
       query: getProjects,
-      fetchPolicy: 'cache-first'
+      fetchPolicy: 'network-only'
     });
     return data.projects;
   } catch (error) {
