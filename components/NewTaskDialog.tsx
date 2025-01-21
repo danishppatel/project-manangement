@@ -47,7 +47,6 @@ const NewTaskDialog = ({ open, onClose, onAdd, error }: NewTaskDialogProps) => {
       setTitle("");
       setDescription("");
       setAssignedTo("");
-      onClose();
     }
   };
 

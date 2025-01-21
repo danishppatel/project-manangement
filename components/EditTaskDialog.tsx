@@ -80,10 +80,9 @@ const EditTaskDialog = ({
         status: formData.status,
         ...(formData.assignedTo ? { assignedTo: formData.assignedTo } : {})
       });
-      onClose();
+      
     }
   };
-  console.log(error)
   const handleChange =
     (field: string) =>
     (
@@ -110,7 +109,8 @@ const EditTaskDialog = ({
               <Typography 
                 color="error" 
                 sx={{ 
-                  mb: 2, 
+                  mt: 2, 
+                  mb: 1,
                   fontSize: '0.875rem',
                   display: 'flex',
                   alignItems: 'center',
