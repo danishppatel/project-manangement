@@ -7,6 +7,7 @@ export const typeDefs = gql`
     id: ID!
     name: String!
     email: String!
+    role: Role!
     tasks: [Task!]
   }
 
@@ -90,13 +91,19 @@ export const typeDefs = gql`
     user: User!
   }
 
-  input LoginInput {
-    email: String!
-    password: String!
+  enum Role {
+    ADMIN
+    USER
   }
 
-  input RegisterInput {
+  input SignUpInput {
     name: String!
+    email: String!
+    password: String!
+    role: Role!
+  }
+
+  input SignInInput {
     email: String!
     password: String!
   }
@@ -116,7 +123,7 @@ export const typeDefs = gql`
     
     assignTaskToUser(input: AssignTaskInput!): Task!
     
-    register(input: RegisterInput!): AuthPayload!
-    login(input: LoginInput!): AuthPayload!
+    signUp(input: SignUpInput!): AuthPayload!
+    signIn(input: SignInInput!): AuthPayload!
   }
 `;

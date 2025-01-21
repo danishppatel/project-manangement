@@ -48,7 +48,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
         setIsLoading(true);
         const data = await getAllProjects(client);
         setProjects(data as Project[]);
-        console.log(data)
+
         // Set selected project after we have the data
         if (data && data.length > 0) {
           const project = data.find((p) => p.id === projectId);
@@ -184,7 +184,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
       setIsLoading(false);
     }
   };
-  
+
   const groupedTasks = {
     pending: tasks?.filter((task) => task.status === "PENDING") || [],
     in_progress: tasks?.filter(
@@ -206,7 +206,7 @@ export default function ClientPage({ projectId }: { projectId: string }) {
     try {
       // Call the API to create new project
       const newProject = await createNewProject(client, {
-        name,
+      name,
         description
       });
       

@@ -3,6 +3,8 @@ import IconButton from "../atoms/IconButton";
 import AddIcon from "@mui/icons-material/Add";
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
+import { RoleBasedRender } from './RoleBasedRender';
+
 
 interface SectionHeaderProps {
   title: string;
@@ -27,9 +29,11 @@ const SectionHeader = ({ title, onAddClick, onDrawerToggle, showDrawerIcon }: Se
       </Typography>
     </Link>
     <Box sx={{ display: 'flex', gap: 1 }}>
-      <IconButton size="small" startIcon={<AddIcon />} onClick={onAddClick}>
-        Add
-      </IconButton>
+      <RoleBasedRender>
+        <IconButton size="small" startIcon={<AddIcon />} onClick={onAddClick}>
+          Add
+        </IconButton>
+      </RoleBasedRender>
       {showDrawerIcon && (
         <IconButton size="small" onClick={onDrawerToggle}>
           <MenuIcon />

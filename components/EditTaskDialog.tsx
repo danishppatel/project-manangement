@@ -83,7 +83,7 @@ const EditTaskDialog = ({
       onClose();
     }
   };
-  console.log(error)
+
   const handleChange =
     (field: string) =>
     (
