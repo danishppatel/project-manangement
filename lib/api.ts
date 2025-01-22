@@ -28,7 +28,7 @@ interface UpdateProjectInput {
 interface CreateTaskInput {
   title: string;
   description?: string;
-  status: string;
+  status?: string;
   projectId: string;
   assignedTo?: string | null;
 }
@@ -171,7 +171,7 @@ export async function createNewTask(
     const taskInput = {
       title: input.title,
       description: input.description,
-      status: input.status,
+      status: input.status || "PENDING",
       projectId: input.projectId,
       ...(input.assignedTo ? { assignedTo: input.assignedTo } : {})
     };

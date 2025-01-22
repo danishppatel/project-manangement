@@ -8,28 +8,42 @@ import EditTaskDialog from "../organisms/EditTaskDialog";
 import NewProjectDialog from "../organisms/NewProjectDialog";
 import ProjectsSidebar from "../organisms/ProjectsSidebar";
 import TasksSection from "./TasksSection";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { getAllProjects, createNewProject, createNewTask, deleteExistingTask, updateExistingTask, getTasksByProject } from "@/lib/api";
 import client from "@/graphql/apollo-client";
 import { Task } from "@/types/task";
 import { Project } from "@/types/project";
 import ConfirmDialog from "../molecules/ConfirmDialog";
+import { useProjectContext } from '@/contexts/ProjectContext';
+import { 
+  CreateTaskInput, 
+  ProjectTask,
+} from '@/types';
 
-export default function ProjectDetailPage({ projectId }: { projectId: string }) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function ProjectDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const currentProjectId = params?.id as string;
+  
+  const { 
+    projects, 
+    setProjects, 
+    setSelectedProjectId,
+    updateProjectTasks
+  } = useProjectContext();
+
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
-  const router = useRouter();
 
-  // Memoize selected project to prevent unnecessary re-renders
+  // Memoize selected project
   const selectedProject = useMemo(() => 
-    projects.find((p) => p.id === projectId),
-    [projects, projectId]
+    projects.find((p) => p.id === currentProjectId),
+    [projects, currentProjectId]
   );
 
   // Memoize grouped tasks
@@ -39,33 +53,39 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     completed: tasks?.filter((task) => task.status === "COMPLETED") || [],
   }), [tasks]);
 
-  // Fetch projects only once on mount
+  // Update project selection
+  const handleProjectSelect = useCallback((project: Project) => {
+    setSelectedProjectId(project.id);
+    router.push(`/projects/${project.id}`, { scroll: false });
+  }, [router, setSelectedProjectId]);
+
+  // Fetch projects only if not already loaded
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        if (projects.length === 0) {
+    if (projects.length === 0) {
+      const fetchProjects = async () => {
+        try {
           setIsLoading(true);
           const data = await getAllProjects(client);
           setProjects(data as Project[]);
+          setError(null);
+        } catch (err) {
+          setError(err instanceof Error ? err : new Error('Failed to fetch projects'));
+        } finally {
+          setIsLoading(false);
         }
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch projects'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProjects();
-  }, [projects.length]);
+      };
+      fetchProjects();
+    }
+  }, [projects.length, setProjects]); // Empty dependency array
 
-  // Fetch tasks when selected project changes
+  // Fetch tasks when project ID changes
   useEffect(() => {
     const fetchTasks = async () => {
-      if (!selectedProject) return;
+      if (!currentProjectId) return;
       
       try {
-       
-        const projectTasks = await getTasksByProject(client, selectedProject.id);
+        setIsLoading(true);
+        const projectTasks = await getTasksByProject(client, currentProjectId);
         setTasks(projectTasks);
         setError(null);
       } catch (err) {
@@ -76,40 +96,44 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     };
 
     fetchTasks();
-  }, [selectedProject]);
+  }, [currentProjectId]);
 
-  // Memoize handlers to prevent unnecessary re-renders
-  const handleProjectSelect = useCallback((project: Project) => {
-    router.push(`/projects/${project.id}`);
-  }, [router]);
+  // Update selected project ID when URL changes
+  useEffect(() => {
+    if (currentProjectId) {
+      setSelectedProjectId(currentProjectId);
+    }
+  }, [currentProjectId, setSelectedProjectId]);
 
   const handleAddTask = useCallback(async (newTask: { title: string; description?: string }) => {
     if (!selectedProject) return;
 
     try {
-      const taskInput = {
+      const taskInput: CreateTaskInput = {
         title: newTask.title,
-        description: newTask.description,
+        description: newTask.description || '',
         status: "PENDING",
-        projectId: selectedProject.id
+        projectId: selectedProject.id,
+        assignedTo: undefined
       };
 
       const createdTask = await createNewTask(client, taskInput);
       setTasks(prevTasks => [...prevTasks, createdTask]);
-      setProjects(prevProjects => 
-        prevProjects.map(project =>    
-          project.id === selectedProject.id 
-            ? { ...project, tasks: [...(project.tasks || []), { 
-                id: createdTask.id,
-                title: createdTask.title, 
-                description: createdTask.description,
-                status: createdTask.status as "PENDING" | "COMPLETED" | "INPROGRESS",
-                assignedTo: createdTask.assignedTo
-              }] }
-            : project
-        )
-      );
-
+      
+      // Use context method for updating project tasks
+      const updatedTasks: ProjectTask[] = [
+        ...(selectedProject.tasks || []),
+        {
+          id: createdTask.id,
+          title: createdTask.title,
+          description: createdTask.description,
+          status: createdTask.status,
+          assignedTo: createdTask.assignedTo || '',
+          projectId: selectedProject.id
+        }
+      ];
+      
+      updateProjectTasks(selectedProject.id, updatedTasks);
       setIsNewTaskDialogOpen(false);
       setError(null);
     } catch (error) {
@@ -117,7 +141,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     } finally {
       setIsLoading(false);
     }
-  }, [selectedProject]);
+  }, [selectedProject, updateProjectTasks]);
 
   const handleEditTask = useCallback(async (task: {
     id: string;
@@ -180,7 +204,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     } finally {
       setIsLoading(false);
     }
-  }, [selectedProject]);
+  }, [selectedProject, setProjects]);
 
   const handleAddProject = useCallback(async ({ name, description }: { name: string; description?: string }) => {
     try {
@@ -192,7 +216,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setProjects]);
 
   const handleTaskStatusUpdate = (taskId: string, newStatus: TaskStatus) => {
     setTasks((prevTasks) => {
