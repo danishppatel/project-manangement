@@ -32,7 +32,7 @@ interface UpdateProjectInput {
 interface CreateTaskInput {
   title: string;
   description?: string;
-  status: string;
+  status?: string;
   projectId: string;
   assignedTo?: string | null;
 }
@@ -60,7 +60,7 @@ export async function getAllProjects(client: ApolloClient<NormalizedCacheObject>
   try {
     const { data } = await client.query({
       query: getProjects,
-      fetchPolicy: 'cache-first'
+      fetchPolicy: 'network-only'
     });
     return data.projects;
   } catch (error) {
@@ -186,7 +186,7 @@ export async function createNewTask(
     const taskInput = {
       title: input.title,
       description: input.description,
-      status: input.status,
+      status: input.status || "PENDING",
       projectId: input.projectId,
       ...(input.assignedTo ? { assignedTo: input.assignedTo } : {})
     };

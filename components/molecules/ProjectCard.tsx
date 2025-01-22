@@ -90,7 +90,7 @@ export default function ProjectCard({ project, onEdit, onDelete, tasks }: Projec
                 color: 'rgba(255,255,255,0.7)',
                 mb: 2,
                 display: '-webkit-box',
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 1,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
