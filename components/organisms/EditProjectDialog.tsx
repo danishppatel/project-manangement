@@ -48,7 +48,6 @@ const EditProjectDialog = ({
         id: project.id,
         ...formData,
       });
-      onClose();
     }
   };
 

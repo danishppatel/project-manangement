@@ -66,7 +66,7 @@ export default function ClientPageContainer() {
         setEditingProject(null);
       })
       .catch(error => {
-        console.error('Failed to update project:', error);
+        setError(error instanceof Error ? error : new Error('Failed to update project'));
         // Handle error
       });
   };
