@@ -15,31 +15,43 @@ interface JwtPayload {
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const router = useRouter();
-
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const validateToken = () => {
+      const token = localStorage.getItem('token');
 
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        localStorage.removeItem('token');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
 
       try {
         const decoded = jwtDecode<JwtPayload>(token);
-        setUser({
-          id: decoded.userId,
-          name: decoded.name,
-          email: decoded.email,
-          role: decoded.role
-        });
+        if (decoded) {
+          setUser({
+            id: decoded.userId,
+            name: decoded.name,
+            email: decoded.email,
+            role: decoded.role
+          });
+        }
       } catch (error) {
         console.error('Failed to decode token:', error);
+        localStorage.removeItem('token');
         setUser(null);
       }
-    
-    setLoading(false);
+      setLoading(false);
+    };
+
+    validateToken();
   }, []);
 
   const isAdmin = user?.role === 'ADMIN';

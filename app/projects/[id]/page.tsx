@@ -1,4 +1,5 @@
 import ClientPage from '@/components/templates/ClientPage';
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 interface Props {
     params: Promise<{
@@ -7,5 +8,11 @@ interface Props {
 }
 export default async function ProjectPage({ params }: Props) {
     const id = await params
-    return <ClientPage projectId={id.id} />;
+
+    return ( 
+    <ProtectedRoute>
+        <ClientPage projectId={id.id} />
+    </ProtectedRoute>
+    );
 }
+ 
