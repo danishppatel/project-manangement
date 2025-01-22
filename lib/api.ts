@@ -8,10 +8,14 @@ import {
   getTasks,
   getTaskByProject,
   updateTask,
-  deleteTask 
+  deleteTask ,
+  signUp,
+  signIn
 } from '@/graphql/queries/query';
 import type { Project } from '@/types/project';
 import type { Task } from '@/types/task';
+import type { AuthPayload } from '@/types/auth';
+
 
 // Project Types
 interface CreateProjectInput {
@@ -38,6 +42,17 @@ interface UpdateTaskInput {
   description?: string;
   status?: string;
   assignedTo?: string | null;
+}
+
+interface SignUpInput {
+  name: string;
+  email: string;
+  password: string;
+  role: 'ADMIN' | 'USER';
+}
+interface SignInInput {
+  email: string;
+  password: string;
 }
 
 // Project Functions
@@ -260,6 +275,42 @@ export async function deleteExistingTask(
         }
       }
     });
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function signUpUser(
+  client: ApolloClient<NormalizedCacheObject>,
+  input: SignUpInput
+): Promise<AuthPayload> {
+  try {
+    const { data } = await client.mutate({
+      mutation: signUp,
+      variables: { input }
+    });
+    
+    localStorage.setItem('token', data.signUp.token);
+    
+    return data.signUp;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function signInUser(
+  client: ApolloClient<NormalizedCacheObject>,
+  input: SignInInput
+): Promise<AuthPayload> {
+  try {
+    const { data } = await client.mutate({
+      mutation: signIn,
+      variables: { input }
+    });
+    
+    localStorage.setItem('token', data.signIn.token);
+    
+    return data.signIn;
   } catch (error) {
     throw new Error(error.message);
   }

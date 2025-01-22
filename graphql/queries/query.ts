@@ -177,3 +177,32 @@ export const getUsers = gql`query GetUsers {
     }
   }
 }`;
+
+export const signUp = gql`
+mutation SignUp($input: SignUpInput!) {
+  signUp(input: $input)  {
+    token
+    user {
+      id
+      name
+      email
+      role
+    }
+  }
+}`;
+
+export const signIn = gql`
+  mutation SignIn($input: SignInInput!) {
+    signIn(input: $input) {
+      token
+      user {
+        id
+        name
+        email
+        role
+      }
+    }
+  }
+`;
+
+  

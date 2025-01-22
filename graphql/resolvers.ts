@@ -1,6 +1,8 @@
 import prisma from '@/lib/prisma';
 import { GraphQLDateTime } from 'graphql-scalars';
 import { CreateTaskInput, QueryArgs, CreateUserInput, UpdateUserInput, UpdateTaskInput, UpdateProjectInput, CreateProjectInput, AssignTaskInput } from './types';
+import { Context } from '@/types/auth';
+import { authResolvers } from './resolvers/auth.resolver';
 
 export const resolvers = {
   DateTime: GraphQLDateTime,
@@ -58,11 +60,14 @@ export const resolvers = {
           tasks: true
         }
       });
-    }
+    },
   },
 
   Mutation: {
-    createProject: async (_: any, { input }: { input: CreateProjectInput }) => {
+    ...authResolvers.Mutation,
+    
+    createProject: async (_: any, { input }: { input: CreateProjectInput }) => {      
+    
       const { name, description } = input;
       
       try {
@@ -90,7 +95,8 @@ export const resolvers = {
       }
     },
 
-    updateProject: async (_: any, { id, input }: {id: string, input: UpdateProjectInput}) => {
+    updateProject: async (_: any, { id, input }: { id: string, input: UpdateProjectInput }) => {
+    
       const { name, description } = input;
       
       try {
@@ -132,7 +138,8 @@ export const resolvers = {
       }
     },
 
-    deleteProject: async (_: any, { id }: QueryArgs) => {
+    deleteProject: async (_: any, { id }: { id: string }) => {
+      
       try {
         if (!id) {
           throw new Error('Project ID is required');
@@ -178,6 +185,17 @@ export const resolvers = {
 
         if (!project) {
           throw new Error('Project not found');
+        }
+
+        const duplicateTask = await prisma.task.findFirst({
+          where: {
+            title: title.trim(),
+            projectId: projectId
+          }
+        });
+
+        if (duplicateTask) {
+          throw new Error('A task with this title already exists in this project');
         }
 
         return await prisma.task.create({
@@ -450,6 +468,6 @@ export const resolvers = {
         console.error('Error assigning task to user:', error);
         throw new Error(error.message || 'Failed to assign task to user');
       }
-    }
+    },
   }
 }; 
